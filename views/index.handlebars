@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.IO chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="/public/js/jquery-2.2.4.min.js"></script>
+  <script type="text/javascript" src="/public/js/idle-timer.min.js"></script>
+  <link rel="stylesheet" href="/public/css/styles.css"/>    
+</head>
+<body>
+  <div class="list">
+    <ul>
+    </ul>
+  </div>
+  <div class="chat">
+    <div class='messages'></div>        
+    <form class='input'>
+      <div class='typing'><input id="m" autocomplete="off"/></div>
+      <div class='button'><button>Enviar</button></div>      
+    </form> 
+  </div>
+</body>
+<script>
+var id = '{{id}}' * 1;
+var idleTime = 0, active = 0, socket = null;
+$(function () {  
+  socket = io();   
+  var names = {123: 'Ivan Vasquez', 124: 'Héctor Olivas', 125: 'Juanito Pérez'};   
+  var rooms = [[123, 124], [123, 125], [124, 125]];
+
+  rooms[id].forEach(function(r){
+    socket.emit('login', r);
+    $(".list ul").append("<li id='ord_" + r + "' value='" + r + "' onclick='setActive(" + r + ")'><div class='status'></div><div class='title'>Orden " + r + "</div><div class='subtitle'>" + names[r] +"</div></li>");
+    $(".chat .messages").append("<div id='msg_" + r + "' class='msg_panel'><div class='head'>Conversación con: " + names[r] + "</div><div class='text'></div></div>");
+  });  
+  
+  active = $(".list ul li:first-child").attr('value');
+  setActive(active);
+
+  $('form').submit(function(e){    
+    socket.emit('message', {room: active, msg: $('#m').val()});
+    $('#msg_' + active + ' .text').append($('<div class="bubble me">').text($('#m').val()));
+    $('#msg_' + active + ' .text').append("<div class='clear'></div>");
+    $('#m').val('');
+    return false;
+  });
+  socket.on('message', function(data){    
+    $('#msg_' + data.room + ' .text').append($('<div class="bubble them">').text(data.msg));
+    $('#msg_' + data.room + ' .text').append("<div class='clear'></div>");
+  });
+  socket.on('user:on', function(data){      
+    if(data.length > 1){
+      $("#ord_" + data.room + " .status").addClass("connected");
+      $("#ord_" + data.room + " .status").removeClass("away");
+    }
+  });
+  socket.on('user:off', function(data){    
+    $("#ord_" + data + " .status").removeClass("connected");
+    $("#ord_" + data + " .status").removeClass("away");
+  });
+  socket.on('user:away', function(data){    
+    $("#ord_" + data + " .status").removeClass("connected");
+    $("#ord_" + data + " .status").addClass("away");
+  });
+  socket.on('user:active', function(data){
+    $("#ord_" + data + " .status").addClass("connected");
+    $("#ord_" + data + " .status").removeClass("away");
+  });
+
+  $(document).bind("idle.idleTimer", function () {
+    socket.emit('idle');
+  });
+  $(document).on( "active.idleTimer", function(){ 
+    socket.emit('active');
+  });
+  $.idleTimer(10000);  
+});
+function setActive(id){
+  active = id;
+  $(".messages div.msg_panel").hide();
+  $("#msg_" + id).show();
+  $(".list ul li").removeClass("active");
+  $("#ord_" + id).addClass("active");
+}
+</script>
+</html>
