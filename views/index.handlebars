@@ -17,7 +17,7 @@
     <div class='messages'></div>        
     <form class='input'>
       <div class='typing'><input id="m" autocomplete="off"/></div>
-      <div class='button'><button>Enviar</button></div>      
+      <div class='button'><button>Send</button></div>      
     </form> 
   </div>
 </body>
@@ -31,41 +31,37 @@ $(function () {
 
   rooms[id].forEach(function(r){
     socket.emit('login', r);
-    $(".list ul").append("<li id='ord_" + r + "' value='" + r + "' onclick='setActive(" + r + ")'><div class='status'></div><div class='title'>Orden " + r + "</div><div class='subtitle'>" + names[r] +"</div></li>");
-    $(".chat .messages").append("<div id='msg_" + r + "' class='msg_panel'><div class='head'>Conversación con: " + names[r] + "</div><div class='text'></div></div>");
+    $(".list ul").append("<li id='ord_" + r + "' value='" + r + "' onclick='setActive(" + r + ")'><div class='status'></div><div class='title'>Room " + r + "</div><div class='subtitle'>" + names[r] +"</div></li>");
+    $(".chat .messages").append("<div id='msg_" + r + "' class='msg_panel'><div class='head'>Chatting with " + names[r] + "</div><div class='text'></div></div>");
   });  
   
   active = $(".list ul li:first-child").attr('value');
   setActive(active);
 
   $('form').submit(function(e){    
-    socket.emit('message', {room: active, msg: $('#m').val()});
+    socket.emit('message', {room: active * 1, msg: $('#m').val()});
     $('#msg_' + active + ' .text').append($('<div class="bubble me">').text($('#m').val()));
     $('#msg_' + active + ' .text').append("<div class='clear'></div>");
     $('#m').val('');
     return false;
   });
-  socket.on('message', function(data){    
+  socket.on('message', function(data){        
     $('#msg_' + data.room + ' .text').append($('<div class="bubble them">').text(data.msg));
     $('#msg_' + data.room + ' .text').append("<div class='clear'></div>");
   });
   socket.on('user:on', function(data){      
     if(data.length > 1){
-      $("#ord_" + data.room + " .status").addClass("connected");
-      $("#ord_" + data.room + " .status").removeClass("away");
+      $("#ord_" + data.room + " .status").addClass("connected").removeClass("away");
     }
   });
-  socket.on('user:off', function(data){    
-    $("#ord_" + data + " .status").removeClass("connected");
-    $("#ord_" + data + " .status").removeClass("away");
+  socket.on('user:off', function(data){        
+    $("#ord_" + data + " .status").removeClass("connected").removeClass("away");
   });
-  socket.on('user:away', function(data){    
-    $("#ord_" + data + " .status").removeClass("connected");
-    $("#ord_" + data + " .status").addClass("away");
+  socket.on('user:away', function(data){        
+    $("#ord_" + data + " .status").removeClass("connected").addClass("away");
   });
-  socket.on('user:active', function(data){
-    $("#ord_" + data + " .status").addClass("connected");
-    $("#ord_" + data + " .status").removeClass("away");
+  socket.on('user:active', function(data){    
+    $("#ord_" + data + " .status").addClass("connected").removeClass("away");
   });
 
   $(document).bind("idle.idleTimer", function () {
