@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"description": "UTCH Chat for service tickets",
 	"dependencies": {
-		"express": "^4.15.2",
+		"express": "^4.17.1",
 		"express-handlebars": "^3.0.0",
 		"socket.io": "^2.0.3"
 	}
